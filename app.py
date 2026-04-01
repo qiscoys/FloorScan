@@ -7,6 +7,10 @@ from main import extract_room_labels, fill_wall_gaps, detect_rooms, match_room_a
 app = Flask(__name__)
 CORS(app) 
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/upload_floorplan', methods=['POST'])
 def upload_floorplan():
     if 'file' not in request.files:
@@ -16,30 +20,29 @@ def upload_floorplan():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    if file:
-        try:
-            filestr = file.read()
-            npimg = np.frombuffer(filestr, np.uint8)
-            img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    try:
+        filestr = file.read()
+        npimg = np.frombuffer(filestr, np.uint8)
+        img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
-            if img is None:
-                return jsonify({"error": "Invalid image format"}), 400
+        if img is None:
+            return jsonify({"error": "Invalid image format"}), 400
 
-            room_labels, text_extracted_img = extract_room_labels(img)
-            gaps_filled_img = fill_wall_gaps(text_extracted_img)
-            _, initial_contours, segmented_img = detect_rooms(img, gaps_filled_img, text_extracted_img)
-            rooms_data, _ = match_room_and_label(room_labels, initial_contours, segmented_img)
-            walls_data = extract_walls_data(img)
+        room_labels, text_extracted_img = extract_room_labels(img)
+        gaps_filled_img = fill_wall_gaps(text_extracted_img)
+        _, initial_contours, segmented_img = detect_rooms(img, gaps_filled_img, text_extracted_img)
+        rooms_data, _ = match_room_and_label(room_labels, initial_contours, segmented_img)
+        walls_data = extract_walls_data(img)
 
-            return jsonify({
-                "status": "success",
-                "data": {
-                    "rooms": rooms_data,
-                    "walls": walls_data
-                }
-            }), 200
+        return jsonify({
+            "status": "success",
+            "data": {
+                "rooms": rooms_data,
+                "walls": walls_data
+            }
+        }), 200
 
-        except Exception as e:
+    except Exception as e:
             return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

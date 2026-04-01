@@ -25,5 +25,5 @@ COPY . .
 # 暴露端口
 EXPOSE 5000
 
-# 使用 gunicorn 启动 Flask 应用
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} app:app --timeout 120"]
+
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --timeout 120 app:app"]
