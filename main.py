@@ -5,7 +5,6 @@ import re
 import time
 import os
 import json
-from matplotlib import pyplot as plt
 import difflib
 
 # ------------------房间颜色定义------------
