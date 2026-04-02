@@ -22,8 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制项目代码
 COPY . .
 
-# 暴露端口
-EXPOSE 5000
+# 暴露端口（Render 会自动注入 $PORT 环境变量）
+EXPOSE 10000
 
-
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --timeout 120 app:app"]
+# --preload  让所有 worker 共享一份已加载的内存，避免 OOM
+# --timeout 300  给 OCR+OpenCV 足够的处理时间
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 1 --timeout 300 --preload app:app"]

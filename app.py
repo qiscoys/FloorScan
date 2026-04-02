@@ -5,17 +5,32 @@ import numpy as np
 from main import extract_room_labels, fill_wall_gaps, detect_rooms, match_room_and_label, extract_walls_data
 
 app = Flask(__name__)
-CORS(app) 
+
+# ── 完整 CORS 配置：允许所有来源的跨域请求（含预检 OPTIONS）──
+CORS(app, resources={r"/*": {"origins": "*"}},
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "OPTIONS"])
+
+@app.after_request
+def after_request(response):
+    response.headers["Access-Control-Allow-Origin"]  = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
 
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "ok"}), 200
 
-@app.route('/upload_floorplan', methods=['POST'])
+@app.route('/upload_floorplan', methods=['POST', 'OPTIONS'])
 def upload_floorplan():
+    # 处理预检请求
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
@@ -43,7 +58,7 @@ def upload_floorplan():
         }), 200
 
     except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
