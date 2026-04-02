@@ -39,7 +39,7 @@ def upload_floorplan():
         filestr = file.read()
         npimg = np.frombuffer(filestr, np.uint8)
         img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-        max_size = 1200
+        max_size = 300
         height, width = img.shape[:2]
         if max(height, width) > max_size:
             scale = max_size / max(height, width)
