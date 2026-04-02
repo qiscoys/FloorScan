@@ -39,7 +39,12 @@ def upload_floorplan():
         filestr = file.read()
         npimg = np.frombuffer(filestr, np.uint8)
         img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
+        max_size = 1200
+        height, width = img.shape[:2]
+        if max(height, width) > max_size:
+            scale = max_size / max(height, width)
+            img = cv2.resize(img, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
+            print(f"Resized image to: {img.shape}")
         if img is None:
             return jsonify({"error": "Invalid image format"}), 400
 
