@@ -39,14 +39,30 @@ def upload_floorplan():
         filestr = file.read()
         npimg = np.frombuffer(filestr, np.uint8)
         img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-        max_size = 300
-        height, width = img.shape[:2]
-        if max(height, width) > max_size:
-            scale = max_size / max(height, width)
-            img = cv2.resize(img, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
-            print(f"Resized image to: {img.shape}")
+    
         if img is None:
             return jsonify({"error": "Invalid image format"}), 400
+
+        height, width = img.shape[:2]
+        long_side = max(height, width)
+ 
+        MIN_SIZE = 800
+        MAX_SIZE = 1500
+ 
+        if long_side < MIN_SIZE:
+            # 太小则放大（低分辨率图片）
+            scale = MIN_SIZE / long_side
+            img = cv2.resize(img, (int(width * scale), int(height * scale)),
+                             interpolation=cv2.INTER_CUBIC)
+            print(f"Upscaled to: {img.shape}")
+        elif long_side > MAX_SIZE:
+            # 太大则缩小
+            scale = MAX_SIZE / long_side
+            img = cv2.resize(img, (int(width * scale), int(height * scale)),
+                             interpolation=cv2.INTER_AREA)
+            print(f"Downscaled to: {img.shape}")
+        else:
+            print(f"Image size OK: {img.shape}")
 
         room_labels, text_extracted_img = extract_room_labels(img)
         gaps_filled_img = fill_wall_gaps(text_extracted_img)
